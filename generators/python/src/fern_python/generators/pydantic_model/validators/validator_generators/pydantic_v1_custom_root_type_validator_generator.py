@@ -1,6 +1,7 @@
 from typing import Tuple
 
 from fern_python.codegen import AST
+from fern_python.external_dependencies.pydantic import PydanticVersionCompatibility
 from fern_python.pydantic_codegen import PydanticModel
 
 from .validator_generator import ValidatorGenerator
@@ -33,7 +34,9 @@ class PydanticV1CustomRootTypeValidatorGenerator(ValidatorGenerator):
                 ),
                 args=[
                     AST.Expression(self._root_type),
-                    AST.Expression(f'{PydanticModel.VALIDATOR_VALUES_PARAMETER_NAME}.get("__root__")'),
+                    AST.Expression(
+                        f'{PydanticModel.VALIDATOR_VALUES_PARAMETER_NAME}.get("{self._get_root_property_name()}")'
+                    ),
                 ],
             ),
         )
@@ -62,7 +65,8 @@ class PydanticV1CustomRootTypeValidatorGenerator(ValidatorGenerator):
             )
             writer.write_line()
         writer.write_line(
-            "return " + f'{{ **{PydanticModel.VALIDATOR_VALUES_PARAMETER_NAME}, "__root__": {ROOT_VARIABLE_NAME} }}'
+            "return "
+            + f'{{ **{PydanticModel.VALIDATOR_VALUES_PARAMETER_NAME}, "{self._get_root_property_name()}": {ROOT_VARIABLE_NAME} }}'
         )
 
     def add_to_validators_class(self, validators_class: AST.ClassDeclaration) -> None:
@@ -109,3 +113,6 @@ class PydanticV1CustomRootTypeValidatorGenerator(ValidatorGenerator):
 
             with writer.indent():
                 writer.write_line("...")
+
+    def _get_root_property_name(self) -> str:
+        return "__root__"

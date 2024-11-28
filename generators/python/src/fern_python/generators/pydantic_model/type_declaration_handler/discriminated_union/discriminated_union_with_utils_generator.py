@@ -363,7 +363,7 @@ class DiscriminatedUnionWithUtilsGenerator(AbstractTypeGenerator):
             )
 
             if self._custom_config.version == PydanticVersionCompatibility.V1:
-                external_pydantic_model.set_root_type_unsafe_v1_only(
+                external_pydantic_model.set_root_type_unsafe(
                     is_forward_ref=True,
                     root_type=root_type,
                     annotation=AST.Expression(

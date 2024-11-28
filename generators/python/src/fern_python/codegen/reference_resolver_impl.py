@@ -4,6 +4,8 @@ from typing import DefaultDict, Dict, Optional, Set
 
 from ordered_set import OrderedSet
 
+from fern_python.codegen.node_writer_impl import NodeWriterImpl
+
 from . import AST
 from .reference_resolver import ReferenceResolver
 
@@ -76,7 +78,7 @@ class ReferenceResolverImpl(ReferenceResolver):
                     prefix_for_qualfied_names=prefix_for_qualfied_names,
                 )
 
-    def resolve_reference(self, reference: AST.Reference) -> str:
+    def resolve_reference(self, reference: AST.Reference, writer: AST.NodeWriter) -> str:
         if self._original_import_to_resolved_import is None:
             raise RuntimeError("References have not yet been resolved.")
 
@@ -96,6 +98,20 @@ class ReferenceResolverImpl(ReferenceResolver):
                 )
             )
         )
+
+        if reference.generic is not None:
+            temp_writer = NodeWriterImpl(
+                should_format=False,
+                should_format_as_snippet=False,
+                whitelabel=False,
+                should_include_header=False,
+                reference_resolver=self,
+            )
+
+            resolved_reference += "["
+            reference.generic.write(writer=temp_writer)
+            resolved_reference += temp_writer.to_str()
+            resolved_reference += "]"
 
         # Here we string-reference a type reference if the import is marked for `if TYPE_CHECKING` or if the import
         # is deferred until after the current declaration (e.g. for circular references when defining Pydantic models).

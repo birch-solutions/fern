@@ -6,13 +6,13 @@ from typing import List, Optional, Sequence, Tuple, Type
 import fern.ir.resources as ir_types
 
 from fern_python.codegen import AST, LocalClassReference, SourceFile
-from fern_python.external_dependencies.pydantic import PydanticVersionCompatibility
+from fern_python.external_dependencies.pydantic import Pydantic
 from fern_python.pydantic_codegen import PydanticField, PydanticModel
 
 from ..context import PydanticGeneratorContext
 from .custom_config import PydanticModelCustomConfig
 from .validators import (
-    PydanticV1CustomRootTypeValidatorsGenerator,
+    PydanticCustomRootTypeValidatorsGenerator,
     PydanticValidatorsGenerator,
     ValidatorsGenerator,
 )
@@ -70,6 +70,8 @@ class FernAwarePydanticModel:
 
         self._model_contains_forward_refs = False
 
+        self._is_pydantic_v2_only = self._custom_config.version == "v2"
+
         models_to_extend = [item for item in base_models] if base_models is not None else []
         extends_crs = (
             [context.get_class_reference_for_type_id(extended.type_id, as_request=False) for extended in extends]
@@ -95,7 +97,9 @@ class FernAwarePydanticModel:
             require_optional_fields=custom_config.require_optional_fields,
             is_pydantic_v2=self._context.core_utilities.get_is_pydantic_v2(),
             universal_field_validator=self._context.core_utilities.universal_field_validator,
-            universal_root_validator=self._context.core_utilities.universal_root_validator,
+            universal_root_validator=self._model_validator
+            if self._is_pydantic_v2_only
+            else self._context.core_utilities.universal_root_validator,
             is_root_model=is_root_model,
             update_forward_ref_function_reference=self._context.core_utilities.get_update_forward_refs(),
             field_metadata_getter=lambda: self._context.core_utilities.get_field_metadata(),
@@ -110,6 +114,15 @@ class FernAwarePydanticModel:
 
     def get_class_name(self) -> str:
         return self._class_name
+
+    def _model_validator(self, pre: bool = False) -> AST.FunctionInvocation:
+        return AST.FunctionInvocation(
+            function_definition=AST.Reference(
+                qualified_name_excluding_import=("model_validator",),
+                import_=Pydantic.PydanticImport(),
+            ),
+            kwargs=[("mode", AST.Expression(expression='"before"' if pre else '"after"'))],
+        )
 
     def add_field(
         self,
@@ -262,22 +275,22 @@ class FernAwarePydanticModel:
     ) -> AST.FunctionDeclaration:
         return self._pydantic_model.add_method(declaration=declaration, decorator=decorator)
 
-    def set_root_type_v1_only(
+    def set_root_type(
         self,
         root_type: ir_types.TypeReference,
         annotation: Optional[AST.Expression] = None,
         is_forward_ref: bool = False,
     ) -> None:
-        self.set_root_type_unsafe_v1_only(
+        self.set_root_type_unsafe(
             root_type=self.get_type_hint_for_type_reference(root_type),
             annotation=annotation,
             is_forward_ref=is_forward_ref,
         )
 
-    def set_root_type_unsafe_v1_only(
+    def set_root_type_unsafe(
         self, root_type: AST.TypeHint, annotation: Optional[AST.Expression] = None, is_forward_ref: bool = False
     ) -> None:
-        self._pydantic_model.set_root_type_unsafe_v1_only(root_type=root_type, annotation=annotation)
+        self._pydantic_model.set_root_type_unsafe(root_type=root_type, annotation=annotation)
 
     def add_ghost_reference(self, type_id: ir_types.TypeId) -> None:
         self._pydantic_model.add_ghost_reference(
@@ -286,10 +299,7 @@ class FernAwarePydanticModel:
 
     def finish(self) -> None:
         if self._custom_config.include_validators:
-            if (
-                self._pydantic_model._v1_root_type is None
-                and self._custom_config.version == PydanticVersionCompatibility.V1
-            ):
+            if self._pydantic_model._root_type is None:
                 self._pydantic_model.add_partial_class()
             self._get_validators_generator().add_validators()
         if self._model_contains_forward_refs or self._force_update_forward_refs:
@@ -309,11 +319,11 @@ class FernAwarePydanticModel:
         self._pydantic_model.finish()
 
     def _get_validators_generator(self) -> ValidatorsGenerator:
-        v1_root_type = self._pydantic_model.get_root_type_unsafe_v1_only()
-        if v1_root_type is not None and self._custom_config.version == PydanticVersionCompatibility.V1:
-            return PydanticV1CustomRootTypeValidatorsGenerator(
+        root_type = self._pydantic_model.get_root_type_unsafe()
+        if root_type is not None:
+            return PydanticCustomRootTypeValidatorsGenerator(
                 model=self._pydantic_model,
-                root_type=v1_root_type,
+                root_type=root_type,
             )
         else:
             unique_name = []

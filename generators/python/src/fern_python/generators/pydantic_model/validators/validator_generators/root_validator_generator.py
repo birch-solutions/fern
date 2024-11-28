@@ -2,6 +2,7 @@ from typing import List, Tuple
 
 from fern_python.codegen import AST
 from fern_python.codegen.ast.nodes.code_writer.code_writer import CodeWriterFunction
+from fern_python.external_dependencies.pydantic import PydanticVersionCompatibility
 from fern_python.pydantic_codegen import PydanticModel
 
 from .validator_generator import ValidatorGenerator
@@ -49,18 +50,26 @@ class RootValidatorGenerator(ValidatorGenerator):
             )
 
             with writer.indent():
-                writer.write(f"{PydanticModel.VALIDATOR_VALUES_PARAMETER_NAME} = ")
+                if self._model._version == PydanticVersionCompatibility.V2: 
+                    writer.write(f"{PydanticModel.MODEL_PARAMETER_NAME} = ")
+                else: 
+                    writer.write(f"{PydanticModel.VALIDATOR_VALUES_PARAMETER_NAME} = ")
                 writer.write_node(
                     AST.FunctionInvocation(
                         function_definition=AST.Reference(
                             qualified_name_excluding_import=(INDIVIDUAL_VALIDATOR_NAME,),
                         ),
-                        args=[AST.Expression(PydanticModel.VALIDATOR_VALUES_PARAMETER_NAME)],
+                        args=[AST.Expression(PydanticModel.MODEL_PARAMETER_NAME if self._model._version == PydanticVersionCompatibility.V2 else PydanticModel.VALIDATOR_VALUES_PARAMETER_NAME)],
                     )
                 )
+                if not pre: 
+                    writer.write(' # type: ignore')
                 writer.write_line()
 
-            writer.write_line(f"return {PydanticModel.VALIDATOR_VALUES_PARAMETER_NAME}")
+            if self._model._version == PydanticVersionCompatibility.V2: 
+                writer.write_line(f"return {PydanticModel.MODEL_PARAMETER_NAME}")
+            else: 
+                writer.write_line(f"return {PydanticModel.VALIDATOR_VALUES_PARAMETER_NAME}")
 
         return _write_validator_body
 

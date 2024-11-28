@@ -3,6 +3,7 @@ from typing import Optional
 import fern.ir.resources as ir_types
 
 from fern_python.codegen import AST, SourceFile
+from fern_python.external_dependencies.pydantic import Pydantic
 from fern_python.generators.pydantic_model.fern_aware_pydantic_model import (
     FernAwarePydanticModel,
 )
@@ -50,9 +51,9 @@ class PydanticModelAliasGenerator(AbstractAliasGenerator):
                 should_export=True,
             )
         else:
-            # NOTE: We validate the config to ensure wrapped aliases are only available for Pydantic V1 users.
-            # As such, we force the root field to be __root__ as opposed to conditional based on the Pydantic version.
             BUILDER_PARAMETER_NAME = "value"
+            is_pydantic_v2 = self._custom_config.version == "v2"
+            type_hint = self._context.get_type_hint_for_type_reference(self._alias.alias_of)
             with FernAwarePydanticModel(
                 class_name=self._context.get_class_name_for_type_id(self._name.type_id, as_request=False),
                 type_name=self._name,
@@ -61,19 +62,24 @@ class PydanticModelAliasGenerator(AbstractAliasGenerator):
                 source_file=self._source_file,
                 docstring=self._docs,
                 snippet=self._snippet,
+                is_root_model=True,
+                base_models=[Pydantic.RootModel(type_hint)] if is_pydantic_v2 else [],
             ) as pydantic_model:
-                pydantic_model.set_root_type_v1_only(self._alias.alias_of)
+                root_name = "root" if is_pydantic_v2 else "__root__"
+                pydantic_model.set_root_type(self._alias.alias_of)
                 pydantic_model.add_method(
                     name=self._get_getter_name(self._alias.alias_of),
                     parameters=[],
                     return_type=self._alias.alias_of,
-                    body=AST.CodeWriter("return self.__root__"),
+                    body=AST.CodeWriter(f"return self.{root_name}"),
                 )
                 pydantic_model.add_method(
                     name=self._get_builder_name(self._alias.alias_of),
                     parameters=[(BUILDER_PARAMETER_NAME, self._alias.alias_of)],
                     return_type=ir_types.TypeReference.factory.named(declared_type_name_to_named_type(self._name)),
-                    body=AST.CodeWriter(f"return {pydantic_model.get_class_name()}(__root__={BUILDER_PARAMETER_NAME})"),
+                    body=AST.CodeWriter(
+                        f"return {pydantic_model.get_class_name()}({root_name}={BUILDER_PARAMETER_NAME})"
+                    ),
                     decorator=AST.ClassMethodDecorator.STATIC,
                 )
 
