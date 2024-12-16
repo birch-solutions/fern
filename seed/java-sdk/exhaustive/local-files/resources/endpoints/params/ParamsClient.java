@@ -17,10 +17,14 @@ import com.fern.sdk.resources.endpoints.params.requests.GetWithMultipleQuery;
 import com.fern.sdk.resources.endpoints.params.requests.GetWithPathAndQuery;
 import com.fern.sdk.resources.endpoints.params.requests.GetWithQuery;
 <<<<<<< HEAD
+<<<<<<< HEAD
 import com.fern.sdk.resources.endpoints.params.requests.ModifyResourceAtInlinedPath;
 =======
 import com.fern.sdk.resources.endpoints.params.requests.ModifyResourceAtPath;
 >>>>>>> c1d6ca465f (fix seed)
+=======
+import com.fern.sdk.resources.endpoints.params.requests.ModifyResourceAtInlinedPath;
+>>>>>>> eff31d23aaa180caee48d55e056c3ca703b41c55
 import java.io.IOException;
 import java.lang.Integer;
 import java.lang.Object;
@@ -328,10 +332,14 @@ public class ParamsClient {
            * PUT to update with path param
            */
 <<<<<<< HEAD
+<<<<<<< HEAD
           public String modifyWithInlinePath(String param, ModifyResourceAtInlinedPath request) {
 =======
           public String modifyWithInlinePath(String param, ModifyResourceAtPath request) {
 >>>>>>> c1d6ca465f (fix seed)
+=======
+          public String modifyWithInlinePath(String param, ModifyResourceAtInlinedPath request) {
+>>>>>>> eff31d23aaa180caee48d55e056c3ca703b41c55
             return modifyWithInlinePath(param,request,null);
           }
 
@@ -339,10 +347,14 @@ public class ParamsClient {
            * PUT to update with path param
            */
 <<<<<<< HEAD
+<<<<<<< HEAD
           public String modifyWithInlinePath(String param, ModifyResourceAtInlinedPath request,
 =======
           public String modifyWithInlinePath(String param, ModifyResourceAtPath request,
 >>>>>>> c1d6ca465f (fix seed)
+=======
+          public String modifyWithInlinePath(String param, ModifyResourceAtInlinedPath request,
+>>>>>>> eff31d23aaa180caee48d55e056c3ca703b41c55
               RequestOptions requestOptions) {
             HttpUrl httpUrl = HttpUrl.parse(this.clientOptions.environment().getUrl()).newBuilder()
               .addPathSegments("params")

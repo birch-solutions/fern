@@ -16,10 +16,14 @@ import com.seed.exhaustive.resources.endpoints.params.requests.GetWithMultipleQu
 import com.seed.exhaustive.resources.endpoints.params.requests.GetWithPathAndQuery;
 import com.seed.exhaustive.resources.endpoints.params.requests.GetWithQuery;
 <<<<<<< HEAD
+<<<<<<< HEAD
 import com.seed.exhaustive.resources.endpoints.params.requests.ModifyResourceAtInlinedPath;
 =======
 import com.seed.exhaustive.resources.endpoints.params.requests.ModifyResourceAtPath;
 >>>>>>> c1d6ca465f (fix seed)
+=======
+import com.seed.exhaustive.resources.endpoints.params.requests.ModifyResourceAtInlinedPath;
+>>>>>>> eff31d23aaa180caee48d55e056c3ca703b41c55
 import java.io.IOException;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
@@ -343,10 +347,14 @@ public class ParamsClient {
      * PUT to update with path param
      */
 <<<<<<< HEAD
+<<<<<<< HEAD
     public String modifyWithInlinePath(String param, ModifyResourceAtInlinedPath request) {
 =======
     public String modifyWithInlinePath(String param, ModifyResourceAtPath request) {
 >>>>>>> c1d6ca465f (fix seed)
+=======
+    public String modifyWithInlinePath(String param, ModifyResourceAtInlinedPath request) {
+>>>>>>> eff31d23aaa180caee48d55e056c3ca703b41c55
         return modifyWithInlinePath(param, request, null);
     }
 
@@ -354,11 +362,16 @@ public class ParamsClient {
      * PUT to update with path param
      */
 <<<<<<< HEAD
+<<<<<<< HEAD
     public String modifyWithInlinePath(
             String param, ModifyResourceAtInlinedPath request, RequestOptions requestOptions) {
 =======
     public String modifyWithInlinePath(String param, ModifyResourceAtPath request, RequestOptions requestOptions) {
 >>>>>>> c1d6ca465f (fix seed)
+=======
+    public String modifyWithInlinePath(
+            String param, ModifyResourceAtInlinedPath request, RequestOptions requestOptions) {
+>>>>>>> eff31d23aaa180caee48d55e056c3ca703b41c55
         HttpUrl httpUrl = HttpUrl.parse(this.clientOptions.environment().getUrl())
                 .newBuilder()
                 .addPathSegments("params")

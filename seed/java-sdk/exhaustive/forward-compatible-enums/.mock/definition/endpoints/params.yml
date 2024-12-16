@@ -83,10 +83,14 @@ service:
       method: PUT
       request:
 <<<<<<< HEAD
+<<<<<<< HEAD
         name: ModifyResourceAtInlinedPath
 =======
         name: ModifyResourceAtPath
 >>>>>>> c1d6ca465f (fix seed)
+=======
+        name: ModifyResourceAtInlinedPath
+>>>>>>> eff31d23aaa180caee48d55e056c3ca703b41c55
         body: string
         path-parameters:
           param: string
