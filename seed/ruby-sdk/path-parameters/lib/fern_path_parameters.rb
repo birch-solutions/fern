@@ -1,9 +1,5 @@
 # frozen_string_literal: true
 
-<<<<<<< HEAD
-require_relative "fern_path_parameters/organizations/types/organization"
-require_relative "fern_path_parameters/user/types/user"
-=======
 require_relative "types_export"
 require_relative "requests"
 require_relative "fern_path_parameters/organizations/client"
@@ -52,4 +48,3 @@ module SeedPathParametersClient
     end
   end
 end
->>>>>>> eff31d23aaa180caee48d55e056c3ca703b41c55
