@@ -61,11 +61,11 @@ export class BundledTypescriptProject extends TypescriptProject {
         }
     }
 
-    protected getYarnFormatCommand(): string[] {
+    protected getFormatCommand(): string[] {
         return [BundledTypescriptProject.FORMAT_SCRIPT_NAME];
     }
 
-    protected getYarnBuildCommand(): string[] {
+    protected getBuildCommand(): string[] {
         return [BundledTypescriptProject.BUILD_SCRIPT_NAME];
     }
 

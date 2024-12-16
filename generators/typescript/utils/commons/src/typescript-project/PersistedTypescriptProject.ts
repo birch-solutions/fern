@@ -13,8 +13,8 @@ export declare namespace PersistedTypescriptProject {
         srcDirectory: RelativeFilePath;
         distDirectory: RelativeFilePath;
         testDirectory: RelativeFilePath;
-        yarnBuildCommand: string[];
-        yarnFormatCommand: string[];
+        buildCommand: string[];
+        formatCommand: string[];
         runScripts: boolean;
     }
 }
@@ -24,8 +24,8 @@ export class PersistedTypescriptProject {
     private srcDirectory: RelativeFilePath;
     private distDirectory: RelativeFilePath;
     private testDirectory: RelativeFilePath;
-    private yarnBuildCommand: string[];
-    private yarnFormatCommand: string[];
+    private buildCommand: string[];
+    private formatCommand: string[];
 
     private hasInstalled = false;
     private hasFormatted = false;
@@ -38,16 +38,16 @@ export class PersistedTypescriptProject {
         srcDirectory,
         distDirectory,
         testDirectory,
-        yarnBuildCommand,
-        yarnFormatCommand,
+        buildCommand,
+        formatCommand,
         runScripts
     }: PersistedTypescriptProject.Init) {
         this.directory = directory;
         this.srcDirectory = srcDirectory;
         this.distDirectory = distDirectory;
         this.testDirectory = testDirectory;
-        this.yarnBuildCommand = yarnBuildCommand;
-        this.yarnFormatCommand = yarnFormatCommand;
+        this.buildCommand = buildCommand;
+        this.formatCommand = formatCommand;
         this.runScripts = runScripts;
     }
 
@@ -73,12 +73,7 @@ export class PersistedTypescriptProject {
             logger
         });
 
-        await yarn(["install"], {
-            env: {
-                // set enableImmutableInstalls=false so we can modify yarn.lock, even when in CI
-                YARN_ENABLE_IMMUTABLE_INSTALLS: "false"
-            }
-        });
+        await yarn(["install"]);
 
         this.hasInstalled = true;
     }
@@ -98,7 +93,7 @@ export class PersistedTypescriptProject {
             cwd: this.directory,
             logger
         });
-        await yarn(this.yarnFormatCommand);
+        await yarn(this.formatCommand);
 
         this.hasFormatted = true;
     }
@@ -118,7 +113,7 @@ export class PersistedTypescriptProject {
             cwd: this.directory,
             logger
         });
-        await yarn(this.yarnBuildCommand);
+        await yarn(this.buildCommand);
 
         this.hasBuilt = true;
     }
