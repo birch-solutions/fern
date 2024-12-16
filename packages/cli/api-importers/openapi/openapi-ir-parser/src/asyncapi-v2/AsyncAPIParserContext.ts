@@ -1,3 +1,4 @@
+import { AsyncAPIObject } from "@asyncapi/parser/esm/spec-types/v3";
 import { Logger } from "@fern-api/logger";
 import { Namespace, SdkGroup, SdkGroupName } from "@fern-api/openapi-ir";
 import { TaskContext } from "@fern-api/task-context";
@@ -6,14 +7,10 @@ import { ParseOpenAPIOptions } from "../options";
 import { SCHEMA_REFERENCE_PREFIX } from "../schema/convertSchemas";
 import { SchemaParserContext } from "../schema/SchemaParserContext";
 import { isReferenceObject } from "../schema/utils/isReferenceObject";
-import { AsyncAPIV2 } from "./v2";
-import { } from "@asyncapi/parser";
-
-const MESSAGE_REFERENCE_PREFIX = "#/components/messages/";
 
 export abstract class AbstractAsyncAPIV2ParserContext implements SchemaParserContext {
     public logger: Logger;
-    public document: AsyncAPIV2.Document;
+    public document: AsyncAPIObject;
     public taskContext: TaskContext;
     public DUMMY: SchemaParserContext;
     public options: ParseOpenAPIOptions;
@@ -25,7 +22,7 @@ export abstract class AbstractAsyncAPIV2ParserContext implements SchemaParserCon
         options,
         namespace
     }: {
-        document: AsyncAPIV2.Document;
+        document: AsyncAPIObject;
         taskContext: TaskContext;
         options: ParseOpenAPIOptions;
         namespace: string | undefined;
@@ -35,7 +32,6 @@ export abstract class AbstractAsyncAPIV2ParserContext implements SchemaParserCon
         this.logger = taskContext.logger;
         this.DUMMY = this;
         this.options = options;
-
         this.namespace = namespace;
     }
 
@@ -81,9 +77,6 @@ export abstract class AbstractAsyncAPIV2ParserContext implements SchemaParserCon
         if (resolvedSchema == null) {
             throw new Error(`${splitSchemaKey[0]} is undefined`);
         }
-        if (isReferenceObject(resolvedSchema)) {
-            resolvedSchema = this.resolveSchemaReference(resolvedSchema);
-        }
 
         if (splitSchemaKey[1] === "properties" && splitSchemaKey[2] != null) {
             const resolvedProperty = resolvedSchema.properties?.[splitSchemaKey[2]];
@@ -97,22 +90,6 @@ export abstract class AbstractAsyncAPIV2ParserContext implements SchemaParserCon
         }
 
         return resolvedSchema;
-    }
-
-    public resolveMessageReference(message: OpenAPIV3.ReferenceObject): AsyncAPIV2.Message {
-        if (
-            this.document.components == null ||
-            this.document.components.messages == null ||
-            !message.$ref.startsWith(MESSAGE_REFERENCE_PREFIX)
-        ) {
-            throw new Error(`Failed to resolve ${message.$ref}`);
-        }
-        const messageKey = message.$ref.substring(MESSAGE_REFERENCE_PREFIX.length);
-        const resolvedMessage = this.document.components.messages[messageKey];
-        if (resolvedMessage == null) {
-            throw new Error(`${message.$ref}  is undefined`);
-        }
-        return resolvedMessage;
     }
 
     public referenceExists(ref: string): boolean {
@@ -133,6 +110,7 @@ export abstract class AbstractAsyncAPIV2ParserContext implements SchemaParserCon
         }
         return true;
     }
+
     public abstract markSchemaAsReferencedByNonRequest(schemaId: string): void;
 
     public abstract markSchemaAsReferencedByRequest(schemaId: string): void;
@@ -157,7 +135,7 @@ export class AsyncAPIV2ParserContext extends AbstractAsyncAPIV2ParserContext {
         options,
         namespace
     }: {
-        document: AsyncAPIV2.Document;
+        document: AsyncAPIObject;
         taskContext: TaskContext;
         options: ParseOpenAPIOptions;
         namespace: string | undefined;
