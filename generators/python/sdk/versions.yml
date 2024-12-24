@@ -1,4 +1,11 @@
 # For unreleased changes, use unreleased.yml
+- version: 4.3.11
+  irVersion: 53
+  changelogEntry:
+    - type: fix
+      summary: |
+        Patch v1 on v2 fix; Enum values are now correctly processed as strings in generated SDK requests.
+
 - version: 4.3.10
   irVersion: 53
   changelogEntry:

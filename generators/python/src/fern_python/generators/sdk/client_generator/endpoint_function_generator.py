@@ -1107,6 +1107,26 @@ class EndpointFunctionGenerator:
 
                 reference = AST.Expression(AST.CodeWriter(write_ternary))
 
+        elif self._is_enum(query_parameter.value_type, allow_optional=True):
+            existing_reference = reference
+
+            def write_enum(writer: AST.NodeWriter) -> None:
+                writer.write_node(existing_reference)
+                writer.write(".value")
+
+            reference = AST.Expression(AST.CodeWriter(write_enum))
+
+            is_optional = not self._is_enum(query_parameter.value_type, allow_optional=False)
+            if is_optional:
+                # needed to prevent infinite recursion when writing the reference to file
+                existing_reference2 = reference
+
+                def write_ternary(writer: AST.NodeWriter) -> None:
+                    writer.write_node(existing_reference2)
+                    writer.write(f" if {get_parameter_name(query_parameter.name.name)} is not None else None")
+
+                reference = AST.Expression(AST.CodeWriter(write_ternary))
+
         elif self._is_date(query_parameter.value_type, allow_optional=True):
             # needed to prevent infinite recursion when writing the reference to file
             existing_reference = reference
@@ -1279,6 +1299,42 @@ class EndpointFunctionGenerator:
             expected=set([ir_types.PrimitiveTypeV1.DATE]),
             allow_optional=allow_optional,
             allow_enum=False,
+        )
+
+    def _is_enum(
+        self,
+        type_reference: ir_types.TypeReference,
+        *,
+        allow_optional: bool,
+    ) -> bool:
+        def visit_named_type(type_name: ir_types.NamedType) -> bool:
+            type_declaration = self._context.pydantic_generator_context.get_declaration_for_type_id(type_name.type_id)
+            return type_declaration.shape.visit(
+                alias=lambda x: False,
+                enum=lambda x: True,
+                object=lambda x: False,
+                union=lambda x: False,
+                undiscriminated_union=lambda x: False,
+            )
+
+        return type_reference.visit(
+            container=lambda container: container.visit(
+                list_=lambda x: False,
+                set_=lambda x: False,
+                optional=lambda item_type: allow_optional
+                and self._is_enum(
+                    item_type,
+                    allow_optional=True,
+                ),
+                map_=lambda x: False,
+                literal=lambda literal: literal.visit(
+                    boolean=lambda x: False,
+                    string=lambda x: False,
+                ),
+            ),
+            named=visit_named_type,
+            primitive=lambda x: False,
+            unknown=lambda: False,
         )
 
     def _is_httpx_primitive_data(self, type_reference: ir_types.TypeReference, *, allow_optional: bool) -> bool:
