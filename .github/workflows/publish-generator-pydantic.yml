@@ -1,5 +1,4 @@
-# Generators are registered within seed.yml, once their tests are passing
-name: publish-and-register-pydantic
+name: Publish Pydantic Model Generator
 
 on:
   push:
