@@ -11,7 +11,7 @@ import {
 
 import { FernRegistry as FdrCjsSdk } from "@fern-fern/fdr-cjs-sdk";
 
-import { convertTypeReference } from "./convertTypeShape";
+import { convertAllowMultipleTypeReference, convertTypeReference } from "./convertTypeShape";
 
 export function convertPackage(
     irPackage: Ir.ir.Package,
@@ -171,7 +171,7 @@ function convertService(
                 (queryParameter): FdrCjsSdk.api.v1.register.QueryParameter => ({
                     description: queryParameter.docs ?? undefined,
                     key: queryParameter.name.wireValue,
-                    type: convertTypeReference(queryParameter.valueType),
+                    type: queryParameter.allowMultiple ? convertAllowMultipleTypeReference(queryParameter.valueType) : convertTypeReference(queryParameter.valueType),
                     availability: convertIrAvailability(queryParameter.availability)
                 })
             ),

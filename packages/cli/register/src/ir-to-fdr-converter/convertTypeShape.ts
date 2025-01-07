@@ -121,6 +121,48 @@ export function convertTypeShape(irType: Ir.types.Type): FdrCjsSdk.api.v1.regist
     });
 }
 
+export function convertAllowMultipleTypeReference(irTypeReference: Ir.types.TypeReference): FdrCjsSdk.api.v1.register.TypeReference {
+    return irTypeReference._visit<FdrCjsSdk.api.v1.register.TypeReference>({
+        container: (container) => {
+            if (container.type === "optional") {
+                return {
+                    type: "optional",
+                    itemType: {
+                        type: "list",
+                        itemType: convertTypeReference(container.optional)
+                    },
+                    defaultValue: undefined
+                };
+            }
+            return {
+                type: "list",
+                itemType: convertTypeReference(irTypeReference)
+            };
+        },
+        named: (name) => {
+            return {
+                type: "list",
+                itemType: convertTypeReference(irTypeReference)
+            };
+        },
+        primitive: (primitive) => {
+            return {
+                type: "list",
+                itemType: convertTypeReference(irTypeReference)
+            };
+        },
+        unknown: () => {
+            return {
+                type: "list",
+                itemType: convertTypeReference(irTypeReference)
+            };
+        },
+        _other: () => {
+            throw new Error("Unknown Type reference: " + irTypeReference.type);
+        }
+    });
+}
+
 export function convertTypeReference(irTypeReference: Ir.types.TypeReference): FdrCjsSdk.api.v1.register.TypeReference {
     return irTypeReference._visit<FdrCjsSdk.api.v1.register.TypeReference>({
         container: (container) => {
